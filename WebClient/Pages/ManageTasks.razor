@@ -1,0 +1,76 @@
+@page "/manage-tasks"
+@inject HttpClient http
+@using Domain.ViewModel
+@using WebClient.Abstractions
+@using WebClient.Shared.Models
+@inject IMemberDataService memberService;
+@inject ITaskDataService taskDataService;
+
+@if(isLoaded) {
+    <div class="page-wrapper row m-0 col-12 p-0 dropzone" ondragover="event.preventDefault();">
+        <div class="col-4 p-0">
+            <LeftMenu />
+        </div>
+        <div class="col-8 p-0">
+            @if (showLister) {
+                <div class="col-10 offset-1 pt-5">
+                    <div class="row m-0">
+                        <Field class="col-9 p-0 custom-input">
+                            <TextEdit Placeholder="Enter New Task" @bind-text="@newTask"/>
+                        </Field>
+                        <div class="col-3 p-0 text-right">
+                            <Button class="add-btn px-4" @onclick="@OnAddItem">Add</Button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-10 offset-1">
+                    <TaskListerComponent />
+                </div>
+            }
+            @if(false) {
+                <div class="col-10 offset-1 pt-5">
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+
+    public List<MemberVm> members;
+    public string newTask;
+
+    private bool isLoaded;
+    private bool showLister;
+
+    protected override Task OnInitializedAsync()
+    {
+        showLister = true;
+        isLoaded = true;
+        return base.OnInitializedAsync();
+    }
+
+    private async Task OnAddItem()
+    {
+        if (string.IsNullOrEmpty(newTask))
+        {
+            return;
+        }
+
+        var task = new TaskModel
+        {
+            Id = Guid.NewGuid(),
+            IsDone = false,
+            Text = newTask
+        };
+
+        newTask = string.Empty;
+
+        if (memberService.SelectedMember != null)
+        {
+            task.Member = memberService.SelectedMember.Id;
+        }
+        await taskDataService.CreateTask(task);
+        StateHasChanged();
+    }
+}
